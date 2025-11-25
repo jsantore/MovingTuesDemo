@@ -3,6 +3,7 @@ import comp151Colors
 dpg.create_context()
 ship_x = 200
 ship_y = 300
+ship_speed = 2
 ship_w, ship_h, channels, ship_raw_data = dpg.load_image("ship.png")
 gold_w, gold_h, channels, gold_raw_data = dpg.load_image("gold-pile.png")
 with dpg.texture_registry():
@@ -12,10 +13,18 @@ dpg.create_viewport(title='ImageDemo', width=800, height=800)
 with dpg.window(label="Image Demo", width=800, height=800):
     with dpg.drawlist(width=800, height=800):
         dpg.draw_rectangle((0,0), (800, 800), fill=comp151Colors.BLUE)
-        dpg.draw_image("ship_pict", (ship_x, ship_y), (ship_x+ship_w, ship_y+ship_h))
+        dpg.draw_image("ship_pict", (ship_x, ship_y), (ship_x+ship_w, ship_y+ship_h), tag="ship_update")
 
 
 dpg.setup_dearpygui()
 dpg.show_viewport()
+while dpg.is_dearpygui_running():
+    ship_x += ship_speed
+    if ship_x > 800 or ship_x < 0:
+        ship_speed = -ship_speed
+    # if ship_x > 800:    # ship loops around
+    #     ship_x = -ship_w
+    dpg.configure_item("ship_update", pmin=(ship_x, ship_y), pmax=(ship_x+ship_w, ship_y+ship_h))
+    dpg.render_dearpygui_frame()
 dpg.start_dearpygui()
 dpg.destroy_context()
