@@ -1,7 +1,9 @@
+import random
+
 import dearpygui.dearpygui as dpg
 import comp151Colors
 
-#boiler plater
+#boiler plate
 dpg.create_context()
 #here I'm setting up all of the variables we want through the entire program
 ship_x = 200
@@ -28,6 +30,19 @@ def move_ship(sender, app_data):
     with dpg.mutex():
         dpg.configure_item("ship_update", pmin=(ship_x, ship_y), pmax=(ship_x+ship_w, ship_y+ship_h))
 
+def create_gold_pile(number):
+    piles = []
+    for i in range(number):
+        current_x = random.randint(0, 720)
+        current_y = random.randint(0, 720)
+        current_pile = {
+            "x": current_x,
+            "y": current_y
+        }
+        piles.append(current_pile)
+    return piles
+
+coin_piles = create_gold_pile(5)
 
 #This creates the texture registry which holds all of the drawable images
 #it absolutately has to be after the create context call
@@ -49,18 +64,24 @@ with dpg.window(label="Image Demo", width=800, height=800):
         # of the image and the tag argument is the tag you will used later to update/move
         #every one has to be unique
         dpg.draw_image("ship_pict", (ship_x, ship_y), (ship_x+ship_w, ship_y+ship_h), tag="ship_update")
+        count = 0
+        for pile in coin_piles:
+            dpg.draw_image("gold_pict", (pile["x"], pile["y"]),
+                           (pile["x"]+gold_w, pile["y"]+gold_h), tag = f"gold_update{count}")
+            count += 1
 
 #now we put the boiler plate for dearpy gui
 dpg.setup_dearpygui()
 dpg.show_viewport()
 #between the show_viewport and the start_dearpygui, we can put this while loop to move things
 while dpg.is_dearpygui_running():
-    # ship_x += ship_speed
-    # if ship_x > 800 or ship_x < 0:
-    #     ship_speed = -ship_speed
-    # # if ship_x > 800:    # ship loops around
-    # #     ship_x = -ship_w
-    # dpg.configure_item("ship_update", pmin=(ship_x, ship_y), pmax=(ship_x+ship_w, ship_y+ship_h))
+    counts = 0
+    for pile in coin_piles:
+        pile["y"]+=1
+        if pile["y"] > 800:
+            pile["y"] = 0 - gold_h
+        dpg.configure_item(f"gold_update{counts}", pmin=(pile["x"], pile["y"]), pmax=(pile["x"]+gold_w, pile["y"]+gold_h))
+        counts += 1
     dpg.render_dearpygui_frame() # render frame is vital, it will allow us to see the moves we made
 dpg.start_dearpygui()
 dpg.destroy_context()
