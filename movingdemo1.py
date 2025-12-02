@@ -9,6 +9,7 @@ dpg.create_context()
 ship_x = 200
 ship_y = 300
 ship_speed = 5
+number_piles_collected = 0
 #loading the pictures from the disk and setting up variables for image width.height
 #the unused color channel information and the raw images
 ship_w, ship_h, channels, ship_raw_data = dpg.load_image("ship.png")
@@ -42,6 +43,18 @@ def create_gold_pile(number):
         piles.append(current_pile)
     return piles
 
+def do_overlap(l1, r1, l2, r2):
+
+    # If one rectangle is to the left of the other
+    if l1.get('x') > r2.get('x') or l2.get('x') > r1.get('x'):
+        return False
+
+    # If one rectangle is above the other
+    if r1.get('y') < l2.get('y') or r2.get('y') < l1.get('y'):
+        return False
+
+    return True
+
 coin_piles = create_gold_pile(5)
 
 #This creates the texture registry which holds all of the drawable images
@@ -69,6 +82,8 @@ with dpg.window(label="Image Demo", width=800, height=800):
             dpg.draw_image("gold_pict", (pile["x"], pile["y"]),
                            (pile["x"]+gold_w, pile["y"]+gold_h), tag = f"gold_update{count}")
             count += 1
+        dpg.draw_text((20,20), f"You've collected {number_piles_collected} gold piles",
+                      color = comp151Colors.WHEAT, size=20, tag="score_update")
 
 #now we put the boiler plate for dearpy gui
 dpg.setup_dearpygui()
@@ -82,6 +97,31 @@ while dpg.is_dearpygui_running():
             pile["y"] = 0 - gold_h
         dpg.configure_item(f"gold_update{counts}", pmin=(pile["x"], pile["y"]), pmax=(pile["x"]+gold_w, pile["y"]+gold_h))
         counts += 1
+        ship_top_left = {
+            "x": ship_x,
+            "y": ship_y
+        }
+        ship_bottom_right = {
+            "x": ship_x+ship_w,
+            "y": ship_y+ship_h
+        }
+        bottom_right_pile = {
+            "x": pile["x"]+gold_w,
+            "y": pile["y"]+gold_h
+        }
+        if do_overlap(ship_top_left, ship_bottom_right, pile, bottom_right_pile):
+            number_piles_collected += 1
+            coin_piles.remove(pile)
+            break
+    dpg.configure_item("score_update", text=f"You've collected {number_piles_collected} gold piles")
     dpg.render_dearpygui_frame() # render frame is vital, it will allow us to see the moves we made
 dpg.start_dearpygui()
 dpg.destroy_context()
+
+
+
+
+
+
+
+
