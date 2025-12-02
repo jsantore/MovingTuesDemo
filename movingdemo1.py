@@ -90,6 +90,7 @@ dpg.setup_dearpygui()
 dpg.show_viewport()
 #between the show_viewport and the start_dearpygui, we can put this while loop to move things
 while dpg.is_dearpygui_running():
+    #here we first move and then draw the coin piles one by one
     counts = 0
     for pile in coin_piles:
         pile["y"]+=1
@@ -97,6 +98,8 @@ while dpg.is_dearpygui_running():
             pile["y"] = 0 - gold_h
         dpg.configure_item(f"gold_update{counts}", pmin=(pile["x"], pile["y"]), pmax=(pile["x"]+gold_w, pile["y"]+gold_h))
         counts += 1
+        #now we are getting the top left and bottom right corners of the ship
+        # and the bottom right corner of the pile to use to check for overlap
         ship_top_left = {
             "x": ship_x,
             "y": ship_y
@@ -109,15 +112,29 @@ while dpg.is_dearpygui_running():
             "x": pile["x"]+gold_w,
             "y": pile["y"]+gold_h
         }
+        # if there is an overlap, we add one to the count of collected piles
+        # and remove the pile from the list - removing it means we won't move it again, nor will
+        # we count it for overlap checks
         if do_overlap(ship_top_left, ship_bottom_right, pile, bottom_right_pile):
             number_piles_collected += 1
             coin_piles.remove(pile)
-            break
+            break #after removing one pile, break so we don't run off the list in the for loop
+    #here we are updating the displayed text, otherwise it will just stay as initially drawn
     dpg.configure_item("score_update", text=f"You've collected {number_piles_collected} gold piles")
     dpg.render_dearpygui_frame() # render frame is vital, it will allow us to see the moves we made
 dpg.start_dearpygui()
 dpg.destroy_context()
 
+def do_overlap(l1, r1, l2, r2):
+    # If one rectangle is to the left of the other
+    if l1.get('x') > r2.get('x') or l2.get('x') > r1.get('x'):
+        return False
+
+    # If one rectangle is above the other
+    if r1.get('y') < l2.get('y') or r2.get('y') < l1.get('y'):
+        return False
+
+    return True
 
 
 
